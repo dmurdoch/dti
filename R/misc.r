@@ -1,8 +1,71 @@
-#
-#   This function is a slightly modified version of
-#   function setCores in package spMC version 0.2.2
-#   written by Luca Sartore <drwolf85@gmail.com>
-#
+sioutlier1 <- function( si, s0ind, level, mc.cores = 1, verbose = TRUE){
+##
+##   replace si values that are larger than s0 
+##   create mask and reduce data to region covered by mask
+##
+  dsi <- dim(si)
+  n <- prod(dsi[-length(dsi)])
+  ng <- dsi[length(dsi)]
+  ns0 <- length(s0ind)
+  siind <- (1:ng)[-s0ind]
+  dim(si) <- c(n,ng)
+  si <- t(si)
+  
+  if (verbose) cat("outlier: ")
+
+  if(mc.cores>1){
+    mc.cores.old <- setCores(,reprt=FALSE)
+    setCores(mc.cores)
+  }
+  t1 <- Sys.time()
+  if(mc.cores==1||ng>250){
+    z <- .Fortran("outlier",
+                  as.double(si),
+                  as.integer(n),
+                  as.integer(ng),
+                  as.integer(s0ind),
+                  as.integer(siind),
+                  as.integer(ns0),
+                  si=double(n*ng),
+                  index=logical(n),
+                  DUP=TRUE,
+                  PACKAGE="dti")[c("si","index")]
+    zz <- matrix(z$si,ng,n)
+    index <- (1:n)[z$index]
+    rm(z)
+  } else {
+    zz <- matrix(.Fortran("outlierp",
+                          as.double(si),
+                          as.integer(n),
+                          as.integer(ng),
+                          as.integer(s0ind),
+                          as.integer(ns0),
+                          as.integer(siind),
+                          as.integer(ng-ns0),
+                          si=double(n*(ng+1)),
+                          as.integer(ng+1),
+                          DUP=TRUE,
+                          PACKAGE="dti")$si,ng+1,n)
+    t2 <- Sys.time()
+    if(mc.cores>1) setCores(mc.cores.old,reprt=FALSE)
+    index <- (1:n)[as.logical(zz[ng+1,])]
+    zz <- zz[1:ng,]
+  }
+  ng0 <- length(siind)
+  s0 <- zz[s0ind,]
+  si <- zz[-s0ind,]
+  if(ns0>1) {
+     s0 <- rep(1/ns0,ns0)%*%s0
+  }
+  mask <- array(s0 > level,dsi[-length(dsi)])
+  mask <- connect.mask(mask)
+  nvox <- sum(mask)
+  
+  t2 <- Sys.time()
+  if (verbose) cat( difftime( t2, t1), attr(difftime( t2, t1), "units"), "for", n, "voxel\n")
+  if(mc.cores>1) setCores(mc.cores.old,reprt=FALSE)
+  list(si=zz[,mask],s0=s0[mask],index=index,mask=mask)
+}
 sioutlier <- function( si, s0ind, mc.cores = 1, verbose = TRUE){
   dsi <- dim(si)
   n <- prod(dsi[-length(dsi)])
@@ -18,7 +81,6 @@ sioutlier <- function( si, s0ind, mc.cores = 1, verbose = TRUE){
     mc.cores.old <- setCores(,reprt=FALSE)
     setCores(mc.cores)
   }
-  siindex <- (1:ng)[-s0ind]
   t1 <- Sys.time()
   if(mc.cores==1||ng>250){
     z <- .Fortran("outlier",
@@ -30,7 +92,7 @@ sioutlier <- function( si, s0ind, mc.cores = 1, verbose = TRUE){
                   as.integer(ns0),
                   si=double(n*ng),
                   index=logical(n),
-                  DUP=FALSE,
+                  DUP=TRUE,
                   PACKAGE="dti")[c("si","index")]
   } else {
     zz <- matrix(.Fortran("outlierp",
@@ -43,7 +105,7 @@ sioutlier <- function( si, s0ind, mc.cores = 1, verbose = TRUE){
                           as.integer(ng-ns0),
                           si=double(n*(ng+1)),
                           as.integer(ng+1),
-                          DUP=FALSE,
+                          DUP=TRUE,
                           PACKAGE="dti")$si,ng+1,n)
     t2 <- Sys.time()
     if (verbose) cat( difftime( t2, t1), attr(difftime( t2, t1), "units"), "for", n, "voxel\n")
@@ -76,7 +138,7 @@ mcorr <- function(res,mask,ddim,ngrad0,lags=c(5,5,3),mc.cores=1){
                    as.integer(lags[1]),
                    as.integer(lags[2]),
                    as.integer(lags[3]),
-                   PACKAGE="dti",DUP=FALSE)$scorr
+                   PACKAGE="dti",DUP=TRUE)$scorr
   t2 <- Sys.time()
   cat(difftime(t2,t1),"\n")
   if(mc.cores>1) setCores(mc.cores.old,reprt=FALSE)
@@ -127,7 +189,7 @@ dti3Dev <- function(D,mask,mc.cores=1){
                    as.double(D[,mask]),
                    as.integer(nvox0),
                    ev=double(3*nvox0),
-                   DUP=FALSE,
+                   DUP=TRUE,
                    PACKAGE="dti")$ev
    t2 <- Sys.time()
    cat(difftime(t2,t1)," for",nvox0,"voxel\n")
@@ -151,7 +213,7 @@ dti3Dand <- function(D,mask,mc.cores=1){
                    as.double(D[,mask]),
                    as.integer(nvox0),
                    andir=double(3*nvox0),
-                   DUP=FALSE,
+                   DUP=TRUE,
                    PACKAGE="dti")$andir
    t2 <- Sys.time()
    cat(difftime(t2,t1)," for",nvox0,"voxel\n")
@@ -180,7 +242,7 @@ dti3Dall <- function(D,mask,mc.cores=1){
                    md=double(nvox0),
                    andir=double(3*nvox0),
                    ev=double(3*nvox0),
-                   DUP=FALSE,
+                   DUP=TRUE,
                    PACKAGE="dti")[c("fa","ga","md","andir","ev")]
    t2 <- Sys.time()
    cat(difftime(t2,t1)," for",nvox0,"voxel\n")
@@ -212,7 +274,7 @@ dtieigen <- function(D,mask,mc.cores=1){
                    fa=double(nvox0),
                    ev=double(3*nvox0),
                    andir=double(6*nvox0),
-                   DUP=FALSE,
+                   DUP=TRUE,
                    PACKAGE="dti")[c("fa","ev","andir")]
    t2 <- Sys.time()
    cat(difftime(t2,t1)," for",nvox0,"voxel\n")
@@ -243,7 +305,7 @@ dtiind3D <- function( D, mask, mc.cores = 1, verbose = TRUE){
                 md      = double(nvox0),
                 andir   = double(3*nvox0),
                 bary    = double(3*nvox0),
-                DUP     = FALSE,
+                DUP     = TRUE,
                 PACKAGE = "dti")[c( "fa", "ga", "md", "andir", "bary")]
   if(mc.cores>1) setCores(mc.cores.old,reprt=FALSE)
   t2 <- Sys.time()
@@ -306,6 +368,7 @@ sofmchi <- function(L, to = 50, delta = .01){
   list(ncp = x, mu = mu, s = s, s2 = s2, minlev = minlev, L = L)
 }
 
+
 fncchir <- function(mu,varstats){
 #
 #  Bias-correction
@@ -321,26 +384,6 @@ fncchiv <- function(mu,varstats){
 varstats$s2[findInterval(mu, varstats$mu, all.inside = TRUE)]
 }
 
-fncchiL <- function(x,L){
-##
-##  standard deviation of a noncentral chi-distribution with
-##  2*L df and noncentrality-parameter x
-##
-#require(gsl)
-x <- pmax(x,sqrt(2)*gamma(L+.5)/gamma(L))
-z <- sqrt(pi/2)*gamma(L+1/2)/gamma(1.5)/gamma(L)*hyperg_1F1(-0.5,L, -x^2/2, give=FALSE, strict=TRUE)
-sqrt(2*L+x^2-z^2)
-}
-fncchiL2 <- function(x,L){
-##
-##  variance of a noncentral chi-distribution with
-##  2*L df and noncentrality-parameter x
-##
-#require(gsl)
-x <- pmax(x,sqrt(2)*gamma(L+.5)/gamma(L))
-z <- sqrt(pi/2)*gamma(L+1/2)/gamma(1.5)/gamma(L)*hyperg_1F1(-0.5,L, -x^2/2, give=FALSE, strict=TRUE)
-2*L+x^2-z^2
-}
 
 Spatialvar.gauss<-function(h,h0,d,interv=1){
 #
@@ -525,7 +568,7 @@ connect.mask <- function(mask){
                  integer(n),
                  integer(n),
                  mask=logical(n),
-                 DUP=FALSE,
+                 DUP=TRUE,
                  PACKAGE="dti")$mask
   dim(mask1) <- dm
   mask1
@@ -542,33 +585,33 @@ sphcoord <- function(ccoord){
 }
 
 
-gettriangles <- function(gradients){
-  dgrad <- dim(gradients)
-  if(dgrad[2]==3) gradients <- t(gradients)
-  ngrad <- dim(gradients)[2]
-  ndist <- ngrad*(ngrad-1)/2
-  z <- .Fortran("distvert",
-                 as.double(gradients),
-                 as.integer(ngrad),
-                 ab=integer(2*ndist),
-                 distab=double(ndist),
-                 as.integer(ndist),
-                 DUPL=FALSE,
-                 PACKAGE="dti")[c("ab","distab")]
-  o <- order(z$distab)
-  distab <- z$distab[o]
-  ab <- matrix(z$ab,2,ndist)[,o]
-  z <- .Fortran("triedges",
-                 as.integer(ab),
-                 as.double(distab),
-                 iab=integer(ndist),
-                 as.integer(ndist),
-                 triangles=integer(3*5*ngrad),
-                 ntriangles=as.integer(5*ngrad),
-                 DUPL=FALSE,
-                 PACKAGE="dti")[c("iab","triangles","ntriangles")]
-  list(triangles=matrix(z$triangles,3,5*ngrad)[,1:z$ntriangle], edges=ab[,z$iab==2])
-}
+# gettriangles <- function(gradients){
+#   dgrad <- dim(gradients)
+#   if(dgrad[2]==3) gradients <- t(gradients)
+#   ngrad <- dim(gradients)[2]
+#   ndist <- ngrad*(ngrad-1)/2
+#   z <- .Fortran("distvert",
+#                  as.double(gradients),
+#                  as.integer(ngrad),
+#                  ab=integer(2*ndist),
+#                  distab=double(ndist),
+#                  as.integer(ndist),
+#                  DUPL=TRUE,
+#                  PACKAGE="dti")[c("ab","distab")]
+#   o <- order(z$distab)
+#   distab <- z$distab[o]
+#   ab <- matrix(z$ab,2,ndist)[,o]
+#   z <- .Fortran("triedges",
+#                  as.integer(ab),
+#                  as.double(distab),
+#                  iab=integer(ndist),
+#                  as.integer(ndist),
+#                  triangles=integer(3*5*ngrad),
+#                  ntriangles=as.integer(5*ngrad),
+#                  DUPL=TRUE,
+#                  PACKAGE="dti")[c("iab","triangles","ntriangles")]
+#   list(triangles=matrix(z$triangles,3,5*ngrad)[,1:z$ntriangle], edges=ab[,z$iab==2])
+# }
 
 create.designmatrix.dti <- function(gradient) {
   dgrad <- dim(gradient)
@@ -639,7 +682,7 @@ object@orient <- array(.Fortran("parofor",
                                 as.double(z$andir),
                                 as.integer(prod(dim(mix))),
                                 orient=double(2*prod(dim(mix))),
-                                DUPL=FALSE,
+                                DUPL=TRUE,
                                 PACKAGE="dti")$orient,c(2,dim(mix)))
 object@mix <- array(z$mix,dim(mix))
 object@order <- array(z$order,ddim)

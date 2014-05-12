@@ -1,4 +1,4 @@
-useDynLib(dti)
+useDynLib(dti,.registration=TRUE)
 
 #exportPattern("^[^\\.]")
 
@@ -12,6 +12,5 @@ exportMethods("show", "plot", "print", "summary", "dti.smooth", "dtiTensor",
 exportMethods("extract", "show3d", "tracking", "selectFibers", "reduceFibers",
               "touchingFibers", "combineFibers", "getmask", "sdpar", 
               "getsdofsb", "dwi.smooth", "dwi.smooth.ms")
-export(dtiData, readDWIdata, subsetg, combineDWIdata, awssigmc, afsigmc,
-       dkiIndices, showFAColorScale, tensor2medinria, medinria2tensor)
-
+export(dtiData, readDWIdata, subsetg, combineDWIdata, awssigmc, awslsigmc, afsigmc,
+       aflsigmc, dkiIndices, showFAColorScale, tensor2medinria, medinria2tensor)

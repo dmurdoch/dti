@@ -92,7 +92,7 @@ mask=NULL, method="LINEPROP", minfa=0.3, maxangle=30, subsample=1)
               as.double(minfa), # not yet used
               as.double(maxangle),   # not yet used
 #             as.integer(imethod),    # not yet used (for tracking method)
-              DUP=FALSE)
+              DUP=TRUE)
 
   dim(dd) <- c(length(dd)/6,6);
   istartfiber <- ident.fibers(dd[,1:3])
@@ -126,7 +126,9 @@ mask=NULL, method="LINEPROP", minfa=0.3, maxangle=30, subsample=1)
             )
 })
 
-setMethod("tracking","dtiIndices", function(obj, roix=NULL, roiy=NULL, roiz=NULL, mask=NULL, method="LINEPROP", minfa=0.3, maxangle=30, subsample = 1)
+setMethod("tracking","dtiIndices", function( obj,
+   roix=NULL, roiy=NULL, roiz=NULL, mask=NULL, method="LINEPROP",
+   minfa=0.3, maxangle=30, subsample = 1)
 {
 
   args <- sys.call(-1)
@@ -205,7 +207,7 @@ setMethod("tracking","dtiIndices", function(obj, roix=NULL, roiy=NULL, roiz=NULL
               as.double(minfa), # not yet used
               as.double(maxangle),   # not yet used
 #             as.integer(imethod),    # not yet used (for tracking method)
-              DUP=FALSE, package="dti")
+              DUP=TRUE, package="dti")
 
   dim(dd) <- c(length(dd)/6,6);
   istartfiber <- ident.fibers(dd[,1:3])
@@ -239,10 +241,10 @@ setMethod("tracking","dtiIndices", function(obj, roix=NULL, roiy=NULL, roiz=NULL
             )
 })
 
-setMethod("tracking", "dwiMixtensor",
-function(obj, roix=NULL, roiy=NULL, roiz=NULL, mask=NULL, method="LINEPROP", minfa=0.3, maxangle=30, subsample = 1, mincompartsize=0)
+setMethod("tracking", "dwiMixtensor", function(obj, roix=NULL, roiy=NULL, 
+   roiz=NULL, mask=NULL, method="LINEPROP", minfa=0.3, maxangle=30, 
+   subsample = 1, mincompartsize=0)
 {
-
   args <- sys.call(-1)
   args <- c(obj@call,args)
   imethod <- switch(method, "LINEPROP" = 1,
@@ -326,7 +328,7 @@ function(obj, roix=NULL, roiy=NULL, roiz=NULL, mask=NULL, method="LINEPROP", min
               as.double(minfa),
               as.double(maxangle), 
 #             as.integer(imethod),    # not yet used (for tracking method)
-              DUP=FALSE, package="dti")
+              DUP=TRUE, package="dti")
 
   dim(dd) <- c(length(dd)/6,6);
   istartfiber <- ident.fibers(dd[,1:3])
@@ -360,7 +362,7 @@ function(obj, roix=NULL, roiy=NULL, roiz=NULL, mask=NULL, method="LINEPROP", min
             )
 })
 
-reduceMixtens <- function(mtobj,mincompartsize=0){
+reduceMixtens <- function(mtobj, mincompartsize=0){
 ##
 ##  remove small compartments from tensor mixture 
 ##  for internal use with tracking only !!!

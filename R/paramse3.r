@@ -1,5 +1,4 @@
-gethseqfullse3 <-
-function (kstar, gradstats, kappa=NULL, vext = c(1, 1)) 
+gethseqfullse3 <- function (kstar, gradstats, kappa=NULL, vext = c(1, 1)) 
 {
     ngrad <- dim(gradstats$bghat)[2]
     h  <- vr  <- matrix(0,ngrad,kstar)
@@ -20,7 +19,7 @@ function (kstar, gradstats, kappa=NULL, vext = c(1, 1))
                      vr=double(kstar),#
                      n=integer(1),#
                      as.integer(gradstats$dist),
-                     DUPL=FALSE,
+                     DUPL=TRUE,
                      PACKAGE="dti")[c("h","vr","n")]
        h[i,] <- z$h
        vr[i,] <- z$vr 
