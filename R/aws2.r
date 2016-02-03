@@ -21,13 +21,6 @@ dtireg.smooth <- function(object,hmax=5,hinit=1,lambda=30,rho=1,graph=FALSE,slic
   args <- sys.call(-3)
   args <- c(object@call,args)
   sdcoef <- object@sdcoef
-  if(all(sdcoef[1:4]==0)) {
-    cat("No parameters for model of error standard deviation found\n 
-         Using constant weights\n 
-         You may prefer to run sdpar before calling dtiTensor")
-#    sdcoef <- sdpar(object,interactive=FALSE)@sdcoef
-    object@sdcoef <- c(1,0,1,1)
-  }
   dtobject <- dtiTensor(object,method="nonlinear")
   scale <- dtobject@scale
   mask <- dtobject@mask
@@ -71,7 +64,6 @@ dtireg.smooth <- function(object,hmax=5,hinit=1,lambda=30,rho=1,graph=FALSE,slic
                 andirection=double(3*n),
                 det=double(n),
                 as.double(eps),
-                DUP=TRUE,
                 PACKAGE="dti")[c("D","anindex","andirection","det")]
   dim(z$D) <- dimy
   z$th0 <- th0
@@ -202,7 +194,7 @@ dtireg.smooth <- function(object,hmax=5,hinit=1,lambda=30,rho=1,graph=FALSE,slic
                     integer(maxnw*3),# auxiliary for index of aktive data
                     double(maxnw),# auxiliary for weights
                     double(ngrad),# auxiliary for variances
-                    DUP=TRUE,PACKAGE="dti")[c("th0","D","bi","anindex","andirection","det","sigma2r","sihat")] 
+                    PACKAGE="dti")[c("th0","D","bi","anindex","andirection","det","sigma2r","sihat")] 
      dim(z$th0) <- dim(z$bi) <- dim(z$anindex) <- dim(z$det) <- dim(z$sigma2r) <- dimy[-1]
      dim(z$D) <- dimy
      dim(z$andirection) <- c(3,dimy[-1]) 

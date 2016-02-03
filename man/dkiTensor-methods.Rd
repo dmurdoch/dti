@@ -23,7 +23,7 @@
   \item{method}{Method for tensor estimation. May be \code{"CLLS-QP"} for a qudratic 
 programm solution for the constrained optimization (requires package quadprog), 
 \code{"CLLS-H"} for a heuristic approximation described in Tabesh et al. (2011), 
-or \code{"ULLS"} for an unconstrained linear least squares estimation. }
+or \code{"ULLS"} for an unconstrained linear least squares estimation.}
    \item{mc.cores}{Number of cores to use. Defaults to number of threads specified for openMP, see documentation of package \pkg{awsMethods}. Not yet fully implemented for
   these methods.}
    \item{verbose}{Verbose mode.}

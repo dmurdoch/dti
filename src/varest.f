@@ -1,3 +1,84 @@
+      subroutine fmedian1(x,n,med)
+C
+C  compute the median using a select algorithm instead of sorting
+C
+      implicit logical (a-z)
+      integer n
+      real*8 x(n),med,fmedian
+      external fmedian
+      if(n.gt.2) THEN
+         med = fmedian(x,n)
+      ELSE IF (n.eq.2) THEN
+         med = (x(1)+x(2))/2
+      ELSE   
+         med = x(1)
+      END IF
+C      
+      return
+      end
+      
+      subroutine swap(x,k,l)
+      implicit logical (a-z)
+      integer k,l
+      real*8 x(*),t
+      t = x(k)
+      x(k) = x(l)
+      x(l) = t
+      return
+      end
+      
+      subroutine qselect(x,n,k)
+C
+C  partial sorting using a select algorithm
+C  output x(k) contains the kth element of sort(x)
+C
+      implicit logical (a-z)
+      integer k,n
+      real*8 x(n)
+      integer lft,rght,cur,i
+      real*8 guess
+      lft=1
+      rght=n
+      DO WHILE (lft.lt.rght)
+         guess = x(k)
+         call swap(x,k,rght)
+         cur = lft
+         DO i=cur,rght-1
+            IF(x(i).lt.guess) THEN
+               call swap(x,i,cur)
+               cur=cur+1
+            END IF
+         END DO
+         call swap(x,rght,cur)
+         if(cur.eq.k) EXIT
+         if(cur.lt.k) THEN
+            lft=cur+1
+         ELSE
+            rght=cur-1
+         END IF
+      END DO
+      RETURN
+      END
+
+      real*8 function fmedian(x,n)
+C
+C  compute the median using a select algorithm instead of sorting
+C  used in mediansm
+C      
+      implicit logical (a-z)
+      integer n
+      real*8 x(n)
+      integer m
+      m = n/2+1
+      call qselect(x,n,m)
+      fmedian = x(m)
+      if(mod(n,2).eq.0) THEN
+         m = n-m+1
+         call qselect(x,n,m)
+         fmedian = (fmedian+x(m))/2.d0
+      END IF
+      return
+      end
       subroutine mediansm(y,mask,n1,n2,n3,ind,nind,work,ncores,yout)
 C
 C
@@ -10,10 +91,13 @@ C
       logical mask(n1,n2,n3)
       real*8 y(n1,n2,n3),yout(n1,n2,n3),work(nind,ncores)
       integer i1,i2,i3,j1,j2,j3,j,k,thrednr
+      real*8 fmedian
+      external fmedian
 !$      integer omp_get_thread_num
 !$      external omp_get_thread_num
+      thrednr = 1
 C$OMP PARALLEL DEFAULT(SHARED)
-C$OMP& PRIVATE(i1,i2,i3,j1,j2,j3,k,thrednr)
+C$OMP& PRIVATE(i1,i2,i3,j1,j2,j3,j,k,thrednr)
 C$OMP DO SCHEDULE(GUIDED)
       DO i1=1,n1
 !$         thrednr = omp_get_thread_num()+1
@@ -31,18 +115,20 @@ C$OMP DO SCHEDULE(GUIDED)
                   if(j2.le.0.or.j2.gt.n2) CYCLE
                   j3=i3+ind(3,j)
                   if(j3.le.0.or.j3.gt.n3) CYCLE
+                  if(.not.mask(j1,j2,j3)) CYCLE
                   if(y(j1,j2,j3).le.0.d0) CYCLE
                   k=k+1
                   work(k,thrednr)=y(j1,j2,j3)
                END DO
                IF(k.gt.1) THEN
-                  call qsort3(work(1,thrednr),1,k)
-                  IF (mod(k,2) == 0) THEN    
-                     yout(i1,i2,i3) = 
-     1               (work(k/2,thrednr)+work(k/2+1,thrednr))/2.d0
-                  ELSE
-                     yout(i1,i2,i3) = work(k/2+1,thrednr)
-                  END IF
+                  yout(i1,i2,i3) = fmedian(work(1,thrednr),k)
+C                  call qsort3(work(1,thrednr),1,k)
+C                  IF (mod(k,2) == 0) THEN    
+C                     yout(i1,i2,i3) = 
+C     1               (work(k/2,thrednr)+work(k/2+1,thrednr))/2.d0
+C                  ELSE
+C                     yout(i1,i2,i3) = work(k/2+1,thrednr)
+C                  END IF
                ELSE
                   yout(i1,i2,i3) = y(i1,i2,i3)
                END IF
@@ -91,7 +177,7 @@ C
 !$      external omp_get_thread_num
       n = n1*n2*n3
       thrednr = 1
-      tol=1d-6
+      tol=1d-5
       maxit=100
 C  precompute values of lgamma(corrected df/2) in each voxel
 C$OMP PARALLEL DEFAULT(SHARED)
@@ -157,10 +243,18 @@ C   thats the estimated standard deviation of s(i1,i2,i3)
          if(sw.gt.minni) THEN
             ksin(i1,i2,i3) = sws2/sw
 C needed for the next iteration 
-            low = sgi/1d1
-            up = sgi*1d1
-            call localmin(low,up,wad(1,thrednr),sad(1,thrednr),L,jj,
+C            low = max(sqrt(ksin(i1,i2,i3)/2.d0/L),sgi/1d1)
+             low = sgi/1d1
+C  sqrt(ksin(i1,i2,i3)/2.d0/L) is the solution in the central case !
+C  old code was still correct but inefficient
+C            up = sgi*1d1
+            up = min(sqrt(ksin(i1,i2,i3)/2.d0/L),sgi*1d1)
+            if(up.le.low) THEN
+               sgi = up
+            ELSE
+               call localmin(low,up,wad(1,thrednr),sad(1,thrednr),L,jj,
      1                    tol,maxit,work(1,thrednr),sgi,fmin)
+            END IF
          END IF
          sigman(i)=sgi
          thn(i) = sqrt(max(0.d0,ksin(i1,i2,i3)-2.d0*sgi*sgi*L))

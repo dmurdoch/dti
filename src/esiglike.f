@@ -71,7 +71,7 @@ C clws contains (L-1)\sum_j wj log(sj) + ni (L-1) log2 + lgamma(L)
          z=sqrt(sl)
          zs=z/sig2
          DO j=1,n
-            if(wj(j).gt.0.d0) THEN
+C            if(wj(j).gt.0.d0) THEN
                za=sj(j)*zs
                if(za.le.1d2) THEN
                   za=log(bessliex(za,lm1,1.d0,work))
@@ -81,7 +81,7 @@ C  large value approximation
                END IF
 C  avoid Inf in besseli (unlikely in optimum, does not change convexity)
                eta=eta+wj(j)*za
-            END IF
+C            END IF
          END DO
          lncchi2=ksi/sig2+log(sig2)+lm1/2.d0*log(sl)-eta/ni
       END IF
@@ -112,12 +112,12 @@ C  ksi   - sum(wj*Sj^2)/ni
       ksi=0.d0
       clws=0.d0
       DO j=1,n
-         if(wj(j).gt.0.d0) THEN
+C         if(wj(j).gt.0.d0) THEN
             ni=ni+wj(j)
             sjj=sj(j)
             ksi=ksi+wj(j)*sjj*sjj
             clws=clws+wj(j)*log(sjj)
-         END IF
+C         END IF
       END DO
       clws=-Lm1*clws/ni+Lm1*log(2.d0)+lgammaf(L)
       ksi=ksi/ni
@@ -134,13 +134,10 @@ C  ksi   - sum(wj*Sj^2)/ni
 C  Search for minimum
       DO it=1,maxit   
          xm=0.5d0*(a+b)
-C         call dblepr("x",1,x,1)
-C         call dblepr("xm",2,xm,1)
          eps1=eps*abs(x)+tol/3.d0
          eps2=2.d0*eps1
          IF (abs(x-xm).le.(eps2-0.5d0*(b-a)) ) EXIT 
          gsect = .TRUE.
-C         call dblepr("e0",2,e,1)
          IF (abs(e) .gt. eps1) THEN  
             gsect = .FALSE.
             r=(x-w)*(fx-fv) 
@@ -151,7 +148,6 @@ C         call dblepr("e0",2,e,1)
             q=abs(q)
             r=e
             e=d
-C            call dblepr("p",1,p,1)
             IF (abs(p).ge.abs(0.5d0*q*r).or.
      1                  p.le.q*(a-x).or.p.ge.q*(b-x)) THEN
                 gsect = .TRUE.
@@ -167,10 +163,8 @@ C            call dblepr("p",1,p,1)
             ELSE
                e=b-x
             END IF
-C            call dblepr("e",1,e,1)
             d=goldc*e
          END IF
-C         call dblepr("d",1,d,1)
          IF (abs(d) .ge. eps1) THEN  
             u=x+d
          ELSE

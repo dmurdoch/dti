@@ -26,7 +26,7 @@ setMethod("dwi.smooth.ms",
             # make the call part of the object
             args <- sys.call(-1)
             args <- c(object@call,args)
-
+            
             # we need a lot of object properties
             ddim <- object@ddim
             ngrad <- object@ngrad
@@ -38,13 +38,13 @@ setMethod("dwi.smooth.ms",
             sdcoef <- object@sdcoef
             level <- object@level
             vext <- object@voxelext[2:3]/object@voxelext[1]
-
+            
             # determine the mesh of gradient triangles for interpolation
             # determine the number of shells, hmmm: difficult task!
             # this requires unique values for the bvalues
             # cf. the corresponding code in multishell.r:getnext3g
             msstructure <- getnext3g(grad, bvalues)
-            bv <- bvalues[-s0ind]
+            bv <- msstructure$bv
             nshell <- as.integer(msstructure$nbv)
             ubv <- msstructure$ubv
             
@@ -58,6 +58,7 @@ setMethod("dwi.smooth.ms",
               if (verbose) cat("using supplied array of sigma\n")
             } else if (identical(dim(sigma), c(ddim, nshell+1L))) {
               sigmacase <- 3
+              if (is.null(mask)) mask <- getmask(object, level)$mask
               if (verbose) cat("using supplied array of sigma per shell\n")
             } else {
               if (is.null(mask)) mask <- getmask(object, level)$mask
@@ -74,7 +75,7 @@ setMethod("dwi.smooth.ms",
               if (verbose) cat("using median estimated sigma", sigma,"\n")
               sigmacase <- 1
             }
-
+            
             
             # 
             sb <- object@si[,,,-s0ind]
@@ -96,7 +97,8 @@ setMethod("dwi.smooth.ms",
             } else { # now is per shell
               s0 <- sweep(s0, 1:3, sigma[, , , 1], "/")
               for (shnr in 1:nshell) {
-                sb[, , , bv == ubv[shnr]] <- sweep(sb[, , , bv == ubv[shnr]], 1:3, sigma[, , , shnr], "/")
+                indbv <- (1:length(bv))[bv == ubv[shnr]]
+                sb[, , , indbv] <- sweep(sb[, , , indbv], 1:3, sigma[, , , shnr+1], "/")
               }
             }
             if(ns0>1){
@@ -105,7 +107,7 @@ setMethod("dwi.smooth.ms",
               #  make sure linear combination of s0 has same variance as original 
               dim(s0) <- ddim
             }
-            if (is.null(mask)) mask <- s0>(sqrt(ns0)*level/median(sigma))
+            if (is.null(mask)) mask <- getmask(object, level)$mask
             # determine minimal subcube that contains the mask ore use supplied information
             if(is.null(xind)) xind <- (1:ddim[1])[apply(mask,1,any)]
             if(is.null(yind)) yind <- (1:ddim[2])[apply(mask,2,any)]
@@ -194,8 +196,7 @@ setMethod("dwi.smooth.ms",
                             double(ngrad*mc.cores),#swy
                             double((nshell+1)*mc.cores),#thi
                             double((nshell+1)*mc.cores),#nii
-                            double((nshell+1)*mc.cores),#fsi2                
-                            DUPL=TRUE,
+                            double((nshell+1)*mc.cores),#fsi2
                             PACKAGE="dti")[c("ni","th","ni0","th0")]
               t3 <- Sys.time()
               gc()
@@ -245,10 +246,14 @@ setMethod("dwi.smooth.ms",
               si[xind, yind, zind, -1] <- z$th*sigma
             } else if (sigmacase == 2) {
               si[xind, yind, zind, -1] <- sweep(z$th, 1:3, sigma, "*")
-            } else { # now sigma is an array with (identical(dim(sigma), ddim) == TRUE)
+            } else if (sigmacase == 3) { # now sigma is an array with (identical(dim(sigma), ddim) == TRUE)
               for (shnr in 1:nshell) {
-                si[xind, yind, zind, -1][, , , bv == ubv[shnr]] <- sweep(z$th[, , , bv == ubv[shnr]], 1:3, sigma[, , , shnr], "*")
-              }
+                indth <- (1:length(bv))[bv == ubv[shnr]]
+                indsi <- indth+1
+                si[xind, yind, zind, indsi] <- sweep(z$th[, , , indth], 1:3, sigma[, , , shnr+1], "*")
+                }
+            } else {
+                si[xind, yind, zind, -1] <- z$th*sigma[,,,-1]
             }
             object@si <-  si
             object@gradient <- grad <- cbind(c(0,0,0),grad)
@@ -319,7 +324,6 @@ interpolatesphere0 <- function(theta,th0,ni,ni0,n3g,mask){
                 as.integer(nbv+1),
                 msth=double((nbv+1)*nmask*ng),
                 msni=double((nbv+1)*nmask*ng),
-                DUPL=TRUE,
                 PACKAGE="dti")[c("msth","msni")]
   cat("time for sb-interpolation", format(difftime(Sys.time(),t1),digits=3),"\n")
   mstheta[,mask,] <- z$msth
@@ -368,7 +372,6 @@ interpolatesphere1 <- function(theta,th0,ni,ni0,n3g,mask){
                 as.integer(nbv+1),
                 msth=double((nbv+1)*n*ng),
                 msni=double((nbv+1)*n*ng),
-                DUPL=TRUE,
                 PACKAGE="dti")[c("msth","msni")]
   #cat("time for sb-interpolation", format(difftime(Sys.time(),t1),digits=3),"\n")
   #  now fill vector for s0
@@ -386,7 +389,6 @@ interpolatesphere1 <- function(theta,th0,ni,ni0,n3g,mask){
                                 as.integer(nmask),
                                 as.integer(lindi),
                                 msth0=double(nmask),
-                                DUPL=TRUE,
                                 PACKAGE="dti")$msth0
     #  correct value would be 
     #  msni0[i+1,] <- 1/(1/(ni[,indi])%*%rep(1/lindi,lindi)^2)
@@ -397,7 +399,6 @@ interpolatesphere1 <- function(theta,th0,ni,ni0,n3g,mask){
                                 as.integer(nmask),
                                 as.integer(lindi),
                                 msni0=double(nmask),
-                                DUPL=TRUE,
                                 PACKAGE="dti")$msni0
   }
   dim(msth0) <- dim(msni0) <- c(nbv+1,dth0)
@@ -412,7 +413,6 @@ lkfulls0 <- function(h,vext,n){
                 ind=integer(3*n),
                 w=double(n),
                 n=as.integer(n),
-                DUPL=TRUE,
                 PACKAGE="dti")[c("ind","w","n")]
   dim(z$ind) <- c(3,n)
   list(h=h,ind=z$ind[,1:z$n],w=z$w[1:z$n],nind=z$n)
