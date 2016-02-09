@@ -1,8 +1,6 @@
 
 #include "Vector.h"
 
-using namespace std;
-
 Vector::Vector(int numbArgs)
 {
 	this->n = numbArgs;
@@ -85,7 +83,7 @@ Vector& Vector::operator /(double d)
 	for (int i = 0; i < out.n; i++)
 	{
 		out.components[i] = (this->components[i] / d);
-		if (isnan(out.components[i]))
+		if (ISNAN(out.components[i]))
 		{
 		      nan_counter++;
 		}
