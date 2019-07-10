@@ -1,6 +1,6 @@
 Package: dti
-Version: 1.4
-Date: 2019-05-08
+Version: 1.4.1
+Date: 2019-06-18
 Title: Analysis of Diffusion Weighted Imaging (DWI) Data
 Authors@R: c(person("Karsten", "Tabelow", role = c("aut", "cre"),
                     email = "karsten.tabelow@wias-berlin.de"),
@@ -11,7 +11,7 @@ Author: Karsten Tabelow [aut, cre],
   Joerg Polzehl [aut],
   Felix Anker [ctb]
 Maintainer: Karsten Tabelow <karsten.tabelow@wias-berlin.de>
-Depends: R (>= 3.1.0), awsMethods (>= 1.0-1), adimpro, rgl
+Depends: R (>= 3.5.0), awsMethods (>= 1.1-1), adimpro (>= 0.9), rgl
 SystemRequirements: gsl
 Imports: methods, parallel, oro.nifti (>= 0.3.9), oro.dicom, gsl,
         quadprog
@@ -33,8 +33,7 @@ Copyright: This package is Copyright (C) 2005-2019 Weierstrass
 URL: http://www.wias-berlin.de/research/ats/imaging/
 Suggests: covr
 RoxygenNote: 6.1.0
-Encoding: UTF-8
 NeedsCompilation: yes
-Packaged: 2019-05-08 13:45:26 UTC; polzehl
+Packaged: 2019-07-10 12:43:38 UTC; polzehl
 Repository: CRAN
-Date/Publication: 2019-05-09 09:40:03 UTC
+Date/Publication: 2019-07-10 14:50:49 UTC

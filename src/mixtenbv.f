@@ -483,7 +483,7 @@ C  mval   - aktual best risk
 C
 C  restricted to ngrad<=1000 and m <=10
 C
-      implicit logical (a-z)
+      implicit none
       integer nvox,ngrad,ns,siind(ns,nvox),m,ntry,nv,
      1       isample(m,ntry)
       double precision si(ngrad,nvox),sms(ngrad),dgrad(ngrad,nv),
@@ -580,11 +580,10 @@ C   generate mask
 C   sweep s0 from si to generate  siq
 C   calculate variance of siq
 C
-      integer n,ng0,ng1,level
+      integer n,ng0,mask(n),level
       double precision s0(ng0,n),ms0(n)
-      logical mask(n),maskk
       integer i,k
-      double precision s,z,z2,thresh,s0mean
+      double precision z,thresh
       thresh = max(1,level*ng0)
 C$OMP PARALLEL DEFAULT(NONE)
 C$OMP& SHARED(s0,n,ng0,ms0,mask,thresh)
@@ -596,7 +595,8 @@ C$OMP DO SCHEDULE(STATIC)
             z=z+s0(k,i)
          END DO
          ms0(i) = z/ng0
-         mask(i) = z.ge.thresh
+         mask(i) = 0
+         if(z.ge.thresh) mask(i) = 1
       END DO
 C$OMP END DO NOWAIT
 C$OMP END PARALLEL
