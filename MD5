@@ -1,6 +1,6 @@
 bacc44f64876e8e4f2c3f50c8ed0e5c4 *ChangeLog
-26349b0f60102b4ca2cb4b80a81cb1f5 *DESCRIPTION
-f955e9b152376bfefdc7fcec3c5472d8 *NAMESPACE
+4f24a8383a5f47ff7871cc3aec754326 *DESCRIPTION
+17e181d9bfc0798f888bbf3b528ff4b6 *NAMESPACE
 e493608d2ecca71e863d37a48b8cdaa6 *R/Classes.r
 5def770bb144f0eb4c1ef9624e8197ba *R/MD.r
 5a1efc82fb89012dd2243826942342d3 *R/aws.r
@@ -27,9 +27,9 @@ c19b3ae45d95d539b977d88fad0fe98e *R/parallel.r
 f11e5e93cc9bf85843dc86f65b0129a8 *R/spherharm.r
 62186b378d0bf61c43379ec58fe1f1c5 *R/tracking.r
 9d6418b18e8b1ef5dcac2b1c4edc4f96 *R/utilities.r
-0b164b5882269f45aed1569a1f41c7c8 *R/varest.r
+49ae3834d212befb6cc900fcae7b086d *R/varest.r
 6ba975db24bba0921cec057925f84313 *README.md
-b81aa69e1eab46a3e96d8416c76dabd6 *build/partial.rdb
+14f661e415a34339c6dc69b69a1bd68d *build/partial.rdb
 8879bf6df2543e79acff3e9163ac11a2 *data/colqFA.rda
 20c485f74344eaf1de08a1dcf9319ff8 *data/optgradients.rda
 5dba0b972ed4b3070192a01c24b34428 *data/polyeders.rda
@@ -103,9 +103,9 @@ fe562b8357704dd873f33af5c96eaa5e *src/awsvar.f
 5e208302dc5e8a0282250db2d4d2b333 *src/bmixtensorpl.c
 db4f8999f8a3d67750d24f2eae79b3e3 *src/dtifull.f
 f906e3d2797f9c99b47ab0d4ebd76c35 *src/dtinraw2.f
-6e20b4e3d09bb7723f6a391ebe664440 *src/esiglike.f
+ec0b31cbe5f239afabebb11bb2e5522f *src/esiglike.f
 12f477fa9de50239d0353c626a8d8f46 *src/fibers.f
-8d0f06df2a63f599d06d1af105e8b3d3 *src/init.c
+169a2d7dcbf322595a9e07cafd12f054 *src/init.c
 670d1b00b1ea65e7dacfd6a24eb34897 *src/misc.f
 d8d84d91dc1b4a56185c998c17c386b1 *src/mixtenbv.f
 a179872bafeed30507c6cf64fbc3d61f *src/mixtens.f
@@ -117,4 +117,4 @@ a179872bafeed30507c6cf64fbc3d61f *src/mixtens.f
 846d4ff92a98ee7e311f986cb84efba0 *src/smse3.f
 e4ba2e7366fdc3bb2916d5b93fa76223 *src/tensor.f
 b78e8569f1767382ff6f8f1ea37d968d *src/tensorc.c
-9ed9dd5fa8dbdf79f9430b38a5bedd4f *src/varest.f
+b10ff9fcd168693611c7975729bc2ea9 *src/varest.f

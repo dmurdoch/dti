@@ -24,10 +24,10 @@ awslsigmc <- function(y,                 # data
   #     diff(quantile(as.numeric(x), c(q, 1-q), na.rm = na.rm, names = FALSE, type = type))
 
   if(trace) tergs <- array(0,c(steps,4,sum(mask))) else tergs <- NULL
-  family <- match.arg(family)
+  family <- match.arg(family,c("NCchi","Gauss","Gaussian"))
 
-  varstats <- sofmchi(ncoils)
-  if("NCchi" == family){
+  if(family == "NCchi"){
+    varstats <- sofmchi(ncoils)
     th <- seq(0,30,.01)
     z <- fncchiv(th,varstats)
     minz <- min(z)
@@ -95,6 +95,12 @@ awslsigmc <- function(y,                 # data
   parammd$ind <- parammd$ind[1:(3*nwmd)]
   dim(parammd$ind) <- c(3,nwmd)
   ## iterate PS starting with bandwidth h0
+  if(family=="NCchi"){
+#  precompute values of log(besselI) for interpolation
+    nfb <- 200 * ncoils  # for arguments > nfb  asymp. approx can be used
+    x <- 1:nfb
+    flb <- x + log(besselI(x, ncoils-1, TRUE))
+  }
   for (i in 1:steps) {
 
     h <- 1.25^((i-1)/3)
@@ -111,6 +117,7 @@ awslsigmc <- function(y,                 # data
     dim(param$ind) <- c(3,nw)
     param$w   <- param$w[1:nw]
       ## perform one step PS with bandwidth h
+    if(family=="NCchi"){
       z <- .Fortran(C_awslchi2,
                     as.double(y),        # data
                     as.double(ksi),# \sum w_ij S_j^2
@@ -134,14 +141,36 @@ awslsigmc <- function(y,                 # data
                     double(floor(ncoils)*mc.cores), # work(L,nthreds)
                     th = double(n),
                     sigman = double(n),
-                    ksi = double(n))[c("ni","ksi","th","sigman")]
+                    ksi = double(n),
+                    as.double(flb),
+                    as.integer(nfb))[c("ni","ksi","th","sigman")]
       thchi <- z$th
       ksi <- z$ksi
       thchi[!mask] <- 0
+    } else{
+      ## assume Gaussian data
+      z <- .Fortran(C_awslgaus,
+                    as.double(y),        # data
+                    as.double(th),# \sum w_ij S_j
+                    ni = as.double(ni),
+                    as.double(sigma),
+                    as.integer(mask),
+                    as.integer(ddim[1]),
+                    as.integer(ddim[2]),
+                    as.integer(ddim[3]),
+                    as.integer(param$ind),
+                    as.double(param$w),
+                    as.integer(nw),
+                    as.double(minni),
+                    as.double(lambda),
+                    th = double(n),
+                    sigman = double(n))[c("ni","th","sigman")]
+
+    }
       ## extract sum of weigths (see PS) and consider only voxels with ni larger then mean
     th <- array(z$th,ddim)
     ni <- array(z$ni,ddim)
-    mask[z$sigman==0] <- FALSE
+    z$sigman[z$sigman==0] <- median(z$sigman[z$sigman>0])
     nmask <- sum(mask)
     if(verbose) cat("local estimation in step ",i," completed",format(Sys.time()),"\n")
     ##
@@ -204,8 +233,12 @@ awslsigmc <- function(y,                 # data
   }
   ## END PS iteration
   if(!verbose) cat("\n")
-  thchi <- fncchir(th/sigma,varstats)*sigma
-  thchi[!mask] <- 0
+  if(family=="NCchi"){
+     thchi <- fncchir(th/sigma,varstats)*sigma
+     thchi[!mask] <- 0
+  } else {
+    thchi <- NULL
+  }
   ## this is the result (th is expectation, not the non-centrality parameter !!!)
   invisible(list(sigma = sigma,
                  sigmal = array(z$sigman,ddim),
