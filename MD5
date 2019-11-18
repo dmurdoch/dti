@@ -1,5 +1,5 @@
 bacc44f64876e8e4f2c3f50c8ed0e5c4 *ChangeLog
-33c53b7dfdfd2e59370b00fb8985b19b *DESCRIPTION
+489e4fbcf810490df42cf802bece357d *DESCRIPTION
 17e181d9bfc0798f888bbf3b528ff4b6 *NAMESPACE
 e493608d2ecca71e863d37a48b8cdaa6 *R/Classes.r
 5def770bb144f0eb4c1ef9624e8197ba *R/MD.r
@@ -29,7 +29,7 @@ f11e5e93cc9bf85843dc86f65b0129a8 *R/spherharm.r
 9d6418b18e8b1ef5dcac2b1c4edc4f96 *R/utilities.r
 49ae3834d212befb6cc900fcae7b086d *R/varest.r
 6ba975db24bba0921cec057925f84313 *README.md
-0a482f75d5344c968be3aefee19d013d *build/partial.rdb
+b219b5390366facf070b083e6cdc14b0 *build/partial.rdb
 8879bf6df2543e79acff3e9163ac11a2 *data/colqFA.rda
 20c485f74344eaf1de08a1dcf9319ff8 *data/optgradients.rda
 5dba0b972ed4b3070192a01c24b34428 *data/polyeders.rda
@@ -89,7 +89,7 @@ c285f70592f7a2558e936b354c0f7775 *src/Fiber.cpp
 45effe601677655fdb0430e83d6fda09 *src/Fibertracking.cpp
 67216ecf635d74a89d1c0b6377cb1b7e *src/Fibertracking.h
 57d7603e4cc8806d2c5a4b41c1b5a1e9 *src/LawsonHansonnnls.f
-9e9389b830a044dfc0e9c174a47b8fdc *src/Makevars
+b9c954f6a99c10ff55a834247ab6bbff *src/Makevars
 68d44c01f5de4194c52daa9902041fca *src/TrackingInterface.cpp
 ef37ec4c30886cf12b37991ae7dbd95b *src/Vector.cpp
 c0ebc844ab7f569daa02bb4fea0da913 *src/Vector.h
