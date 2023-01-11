@@ -19,8 +19,8 @@ importFrom("gsl", "ellint_RF", "ellint_RD", "legendre_sphPlm")
 importFrom("oro.dicom", "readDICOMFile", "extractHeader")
 importFrom("oro.nifti", "readAFNI", "readANALYZE", "nifti", "readNIfTI", "writeNIfTI")
 importFrom("quadprog", "solve.QP")
-importFrom("rgl", "rgl.triangles", "rgl.lines", "rgl.points", "open3d", "par3d",
-          "rgl.bg", "rgl.cur", "bbox3d", "title3d")
+importFrom("rgl", "triangles3d", "segments3d", "points3d", "open3d", "par3d",
+          "bg3d", "cur3d", "bbox3d", "title3d")
 
 export("AdjacencyMatrix")
 export(dti.options)
